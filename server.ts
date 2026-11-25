@@ -126,6 +126,7 @@ import { imageCaptchas, verifyImageCaptcha } from './routes/imageCaptcha'
 import { upgradeToDeluxe, deluxeMembershipStatus } from './routes/deluxe'
 import { serveCodeSnippet, checkVulnLines } from './routes/vulnCodeSnippet'
 import { orderHistory, allOrders, toggleDeliveryStatus } from './routes/orderHistory'
+import { exportOrders, downloadExport, archiveExports, notifyExportReady } from './routes/orderExport'
 import { continueCode, continueCodeFindIt, continueCodeFixIt } from './routes/continueCode'
 import { ensureFileIsPassed, handleZipFileUpload, checkUploadSize, checkFileType, handleXmlUpload, handleYamlUpload } from './routes/fileUpload'
 
@@ -663,6 +664,10 @@ function configureApp (app: ReturnType<typeof express>, seq: typeof sequelize) {
   app.get('/rest/order-history', utils.asyncHandler(orderHistory()))
   app.get('/rest/order-history/orders', security.isAccounting(), utils.asyncHandler(allOrders()))
   app.put('/rest/order-history/:id/delivery-status', security.isAccounting(), utils.asyncHandler(toggleDeliveryStatus()))
+  app.get('/rest/order-history/export', utils.asyncHandler(exportOrders()))
+  app.get('/rest/order-history/export/:file', downloadExport())
+  app.post('/rest/order-history/export/archive', archiveExports())
+  app.post('/rest/order-history/export/notify', utils.asyncHandler(notifyExportReady()))
   app.get('/rest/wallet/balance', security.appendUserId(), utils.asyncHandler(getWalletBalance()))
   app.put('/rest/wallet/balance', security.appendUserId(), utils.asyncHandler(addWalletBalance()))
   app.get('/rest/deluxe-membership', deluxeMembershipStatus())
