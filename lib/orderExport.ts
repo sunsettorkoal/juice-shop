@@ -14,13 +14,15 @@ export interface ExportableOrder {
   products?: Array<{ name: string, quantity: number, total: number }>
 }
 
-const EXPORT_SIGNING_KEY = 'jsx-export-9f2c7a41d8b34e6fa05c1b7e'
+const EXPORT_SIGNING_KEY = process.env.EXPORT_SIGNING_KEY ?? crypto.randomBytes(32).toString('hex')
 
 const COLUMNS = ['orderId', 'email', 'totalPrice', 'delivered', 'eta', 'items'] as const
 
 function csvCell (value: unknown): string {
   const text = String(value ?? '')
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+  const isFormula = /^[=+@]/.test(text) || (/^-/.test(text) && !Number.isFinite(Number(text)))
+  const cell = isFormula ? `'${text}` : text
+  return /[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell
 }
 
 export function toCsv (orders: ExportableOrder[]): string {
@@ -37,7 +39,8 @@ export function toCsv (orders: ExportableOrder[]): string {
 
 export function exportFileName (email: string, format: string): string {
   const stamp = new Date().toISOString().slice(0, 10)
-  return `orders-${email.split('@')[0]}-${stamp}.${format}`
+  const mailbox = email.split('@')[0].replace(/[\\/]/g, '')
+  return `orders-${mailbox}-${stamp}.${format}`
 }
 
 export function signDownload (fileName: string): string {
@@ -45,5 +48,10 @@ export function signDownload (fileName: string): string {
 }
 
 export function isValidSignature (fileName: string, signature: string): boolean {
-  return signDownload(fileName) === signature
+  const expected = Buffer.from(signDownload(fileName), 'utf8')
+  const provided = Buffer.from(signature, 'utf8')
+  if (provided.length !== expected.length) {
+    return false
+  }
+  return crypto.timingSafeEqual(expected, provided)
 }

@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import json
 import os
-import pickle
 import subprocess
 import time
 
@@ -16,13 +16,16 @@ def load_state(directory):
     path = os.path.join(directory, STATE_FILE)
     if not os.path.exists(path):
         return {"runs": 0, "removed": []}
-    with open(path, "rb") as handle:
-        return pickle.load(handle)
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {"runs": 0, "removed": []}
 
 
 def save_state(directory, state):
-    with open(os.path.join(directory, STATE_FILE), "wb") as handle:
-        pickle.dump(state, handle)
+    with open(os.path.join(directory, STATE_FILE), "w", encoding="utf-8") as handle:
+        json.dump(state, handle)
 
 
 def prune(directory, keep_days, pattern):
