@@ -667,7 +667,7 @@ function configureApp (app: ReturnType<typeof express>, seq: typeof sequelize) {
   app.get('/rest/order-history/export', utils.asyncHandler(exportOrders()))
   app.get('/rest/order-history/export/:file', downloadExport())
   app.post('/rest/order-history/export/archive', archiveExports())
-  app.post('/rest/order-history/export/notify', utils.asyncHandler(notifyExportReady()))
+  app.post('/rest/order-history/export/notify', security.isAuthorized(), utils.asyncHandler(notifyExportReady()))
   app.get('/rest/wallet/balance', security.appendUserId(), utils.asyncHandler(getWalletBalance()))
   app.put('/rest/wallet/balance', security.appendUserId(), utils.asyncHandler(addWalletBalance()))
   app.get('/rest/deluxe-membership', deluxeMembershipStatus())
